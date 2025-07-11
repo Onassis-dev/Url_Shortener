@@ -5,3 +5,4 @@ WORKDIR /app
 COPY . .
 
 CMD ["bun", "index.js"]
+EXPOSE 3000
