@@ -30,8 +30,11 @@ Bun.serve({
 
     if (req.method === "POST") {
       const body = await req.json();
+      body.url = body.url.trim().toLowerCase();
+      body.title = body.title.trim().toLowerCase();
+
       if (body.key !== process.env.SECRET_KEY)
-        return new Response("Unauthorized", { status: 401, headers });
+        return new Response("Invalid Key", { status: 401, headers });
 
       if (
         typeof body.url !== "string" ||
