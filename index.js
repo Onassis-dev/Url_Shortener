@@ -12,6 +12,12 @@ if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, "{}");
 
 const links = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
+const headers = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 Bun.serve({
   port: 3000,
   async fetch(req) {
@@ -19,38 +25,34 @@ Bun.serve({
 
     if (req.method === "GET") {
       const response = links[url.pathname];
-      return new Response(response, { status: response ? 200 : 404 });
+      return new Response(response, { status: response ? 200 : 404, headers });
     }
 
     if (req.method === "POST") {
       const body = await req.json();
       if (body.key !== process.env.SECRET_KEY)
-        return new Response("Unauthorized", { status: 401 });
+        return new Response("Unauthorized", { status: 401, headers });
 
       if (
         typeof body.url !== "string" ||
         body.url.length === 0 ||
         !urlRegex.test(body.url)
       )
-        return new Response("Invalid URL", { status: 400 });
+        return new Response("Invalid URL", { status: 400, headers });
 
       if (typeof body.title !== "string" || body.title.length === 0)
-        return new Response("Invalid Title", { status: 400 });
+        return new Response("Invalid Title", { status: 400, headers });
 
       links["/" + body.title] = body.url;
       fs.writeFileSync(filePath, JSON.stringify(links));
 
-      return new Response("", { status: 200 });
+      return new Response("", { status: 200, headers });
     }
 
     if (req.method === "OPTIONS") {
       return new Response("", {
         status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
+        headers,
       });
     }
   },
