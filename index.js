@@ -16,36 +16,42 @@ Bun.serve({
   port: 3000,
   async fetch(req) {
     const url = new URL(req.url);
-    const headers = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
 
     if (req.method === "GET") {
       const response = links[url.pathname];
-      return new Response(response, { status: response ? 200 : 404, headers });
+      return new Response(response, { status: response ? 200 : 404 });
     }
 
     if (req.method === "POST") {
       const body = await req.json();
       if (body.key !== process.env.SECRET_KEY)
-        return new Response("Unauthorized", { status: 401, headers });
+        return new Response("Unauthorized", { status: 401 });
 
       if (
         typeof body.url !== "string" ||
         body.url.length === 0 ||
         !urlRegex.test(body.url)
       )
-        return new Response("Invalid URL", { status: 400, headers });
+        return new Response("Invalid URL", { status: 400 });
 
       if (typeof body.title !== "string" || body.title.length === 0)
-        return new Response("Invalid Title", { status: 400, headers });
+        return new Response("Invalid Title", { status: 400 });
 
       links["/" + body.title] = body.url;
       fs.writeFileSync(filePath, JSON.stringify(links));
 
-      return new Response("", { status: 200, headers });
+      return new Response("", { status: 200 });
+    }
+
+    if (req.method === "OPTIONS") {
+      return new Response("", {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
     }
   },
 });
